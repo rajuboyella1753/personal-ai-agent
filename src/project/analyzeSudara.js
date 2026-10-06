@@ -2,7 +2,7 @@
 import path from "node:path";
 import { readProject } from "./projectReader.js";
 
-const PROJECT_ROOT = "S:\\Univolve";
+const PROJECT_ROOT = process.cwd();
 const OLLAMA_URL = "http://127.0.0.1:11434/api/chat";
 const MODEL = "qwen2.5:3b";
 
@@ -27,7 +27,7 @@ async function analyzeProjectFile(requestedPath) {
 
   if (!file) {
     console.log(
-      "File not found or excluded. Check the relative path inside S:\\Univolve."
+      `File not found or excluded. Check the relative path inside ${PROJECT_ROOT}.`
     );
     console.log("\nAvailable source files:");
     for (const item of files.slice(0, 30)) {

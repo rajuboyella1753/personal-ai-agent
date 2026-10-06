@@ -42,6 +42,9 @@ Answer: open project folder
 User: vscode lo project open cheyyi
 Answer: open vscode
 
+User: cursor lo project open cheyyi
+Answer: open cursor
+
 User: whatsapp open cheyyi
 Answer: open whatsapp
 

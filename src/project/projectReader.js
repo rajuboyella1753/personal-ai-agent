@@ -105,7 +105,7 @@ export async function readProject(projectRoot) {
   return files;
 }
 
-// Keep the existing Sudara reader working for older scripts.
+// Keep older helper scripts working against Ruth's current directory.
 export async function readSudaraProject() {
-  return readProject("S:\\sudara");
+  return readProject(process.cwd());
 }

@@ -34,17 +34,6 @@ async function main() {
 
       const command = input.trim();
 
-      if (
-        command.toLowerCase() ===
-        "exit"
-      ) {
-        console.log(
-          "\n🧠 Ruth Personal AI Agent stopped. Thank you sir!"
-        );
-
-        break;
-      }
-
       if (!command) {
         continue;
       }

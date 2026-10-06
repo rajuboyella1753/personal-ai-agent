@@ -1,7 +1,7 @@
 import { readSudaraProject } from "./projectReader.js";
 
 try {
-  console.log("SuSi: Sudara project scan chesthunna...");
+  console.log("Ruth: Current project scan chesthunna...");
 
   const files = await readSudaraProject();
 

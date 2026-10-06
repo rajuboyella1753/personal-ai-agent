@@ -221,6 +221,12 @@ export const commands = {
     [projectFolder]
   ),
 
+  "open cursor": windowsApp(
+    "Open the current project in Cursor",
+    "cursor",
+    [projectFolder]
+  ),
+
   "open project folder": windowsApp(
     "Open the current project folder",
     "explorer.exe",

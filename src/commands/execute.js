@@ -21,10 +21,58 @@ import {
 import { analyzeCode } from "../project/codeAnalyzer.js";
 
 // ==========================================================
-// CURRENT PROJECT
+// CURRENT WORKING DIRECTORY
 // ==========================================================
 
-const PROJECT_ROOT = process.cwd();
+function getWorkingDirectory() {
+  return process.cwd();
+}
+
+function changeWorkingDirectory(requestedPath) {
+  if (
+    !requestedPath ||
+    !requestedPath.trim()
+  ) {
+    console.log(
+      `Ruth: Current folder: ${getWorkingDirectory()}`
+    );
+
+    return;
+  }
+
+  const raw = requestedPath
+    .trim()
+    .replace(/^["']|["']$/g, "");
+
+  const target =
+    raw.toLowerCase() === "home"
+      ? os.homedir()
+      : path.resolve(
+          getWorkingDirectory(),
+          raw
+        );
+
+  if (!directoryExists(target)) {
+    console.log(
+      `Ruth: Folder dorakaledu: ${target}`
+    );
+
+    return;
+  }
+
+  try {
+    process.chdir(target);
+
+    console.log(
+      `Ruth: Current folder: ${getWorkingDirectory()}`
+    );
+  } catch (error) {
+    console.error(
+      "Ruth: Folder change cheyyalekapoyanu:",
+      error.message
+    );
+  }
+}
 
 // ==========================================================
 // GREETINGS
@@ -72,7 +120,7 @@ function printProjectFiles(files) {
     `\nRuth: ${files.length} readable files dorikayi.`
   );
 
-  console.log(`Project: ${PROJECT_ROOT}\n`);
+  console.log(`Project: ${getWorkingDirectory()}\n`);
 
   for (const file of files) {
     console.log("- " + file.path);
@@ -97,7 +145,7 @@ function directoryExists(folderPath) {
 
 function getFrontendFolder() {
   const folder = path.join(
-    PROJECT_ROOT,
+    getWorkingDirectory(),
     "frontend"
   );
 
@@ -162,7 +210,7 @@ function getFrontendStartCommand(folder) {
 
 function getBackendFolder() {
   const folder = path.join(
-    PROJECT_ROOT,
+    getWorkingDirectory(),
     "backend"
   );
 
@@ -583,6 +631,88 @@ function findVSCodeExecutable() {
 }
 
 // ==========================================================
+// FIND CURSOR
+// ==========================================================
+
+function findExecutableOnPath(commandName) {
+  try {
+    const result = spawnSync(
+      "where.exe",
+      [commandName],
+      {
+        encoding: "utf8",
+        windowsHide: true,
+      }
+    );
+
+    if (
+      !result.error &&
+      result.status === 0
+    ) {
+      const foundPath =
+        result.stdout
+          .split(/\r?\n/)
+          .map((line) =>
+            line.trim()
+          )
+          .find(Boolean);
+
+      if (foundPath) {
+        return foundPath;
+      }
+    }
+  } catch {
+    // Ignore.
+  }
+
+  return null;
+}
+
+function findCursorExecutable() {
+  const homeFolder =
+    os.homedir();
+
+  const candidates = [
+    path.join(
+      homeFolder,
+      "AppData",
+      "Local",
+      "Programs",
+      "cursor",
+      "Cursor.exe"
+    ),
+
+    path.join(
+      process.env.LOCALAPPDATA || "",
+      "Programs",
+      "cursor",
+      "Cursor.exe"
+    ),
+
+    path.join(
+      process.env.ProgramFiles || "",
+      "Cursor",
+      "Cursor.exe"
+    ),
+
+    "B:\\cursor\\cursor\\Cursor.exe",
+  ];
+
+  for (
+    const candidate of candidates
+  ) {
+    if (
+      candidate &&
+      fs.existsSync(candidate)
+    ) {
+      return candidate;
+    }
+  }
+
+  return null;
+}
+
+// ==========================================================
 // OPEN PROJECT IN VS CODE
 // ==========================================================
 
@@ -602,9 +732,9 @@ async function openProjectInVSCode() {
     (resolve) => {
       const child = spawn(
         vscodePath,
-        [PROJECT_ROOT],
+        [getWorkingDirectory()],
         {
-          cwd: PROJECT_ROOT,
+          cwd: getWorkingDirectory(),
           detached: true,
           stdio: "ignore",
           windowsHide: false,
@@ -633,7 +763,7 @@ async function openProjectInVSCode() {
           );
 
           console.log(
-            `Project: ${PROJECT_ROOT}`
+            `Project: ${getWorkingDirectory()}`
           );
 
           resolve(true);
@@ -641,6 +771,232 @@ async function openProjectInVSCode() {
       );
     }
   );
+}
+
+// ==========================================================
+// OPEN PROJECT IN CURSOR
+// ==========================================================
+
+async function openProjectInCursor() {
+  const cursorPath =
+    findCursorExecutable();
+
+  if (!cursorPath) {
+    console.log(
+      "Ruth: Cursor executable dorakaledu."
+    );
+
+    return false;
+  }
+
+  const folder =
+    getWorkingDirectory();
+
+  return new Promise(
+    (resolve) => {
+      const child = spawn(
+        cursorPath,
+        [folder],
+        {
+          cwd: folder,
+          detached: true,
+          stdio: "ignore",
+          windowsHide: false,
+        }
+      );
+
+      child.once(
+        "error",
+        (error) => {
+          console.error(
+            "Ruth: Cursor launch failed:",
+            error.message
+          );
+
+          resolve(false);
+        }
+      );
+
+      child.once(
+        "spawn",
+        () => {
+          child.unref();
+
+          console.log(
+            "Ruth: Cursor lo current project open chesanu."
+          );
+
+          console.log(
+            `Project: ${folder}`
+          );
+
+          resolve(true);
+        }
+      );
+    }
+  );
+}
+
+// ==========================================================
+// OPEN CURRENT PROJECT FOLDER
+// ==========================================================
+
+async function openCurrentProjectFolder() {
+  const folder =
+    getWorkingDirectory();
+
+  return new Promise(
+    (resolve) => {
+      const child = spawn(
+        "explorer.exe",
+        [folder],
+        {
+          cwd: folder,
+          detached: true,
+          stdio: "ignore",
+          windowsHide: false,
+        }
+      );
+
+      child.once(
+        "error",
+        (error) => {
+          console.error(
+            "Ruth: Project folder open cheyyalekapoyanu:",
+            error.message
+          );
+
+          resolve(false);
+        }
+      );
+
+      child.once(
+        "spawn",
+        () => {
+          child.unref();
+
+          console.log(
+            "Ruth: Current project folder open chesanu."
+          );
+
+          console.log(
+            `Folder: ${folder}`
+          );
+
+          resolve(true);
+        }
+      );
+    }
+  );
+}
+
+async function confirmAndOpenVSCode(rl) {
+  const folder =
+    getWorkingDirectory();
+
+  console.log(
+    `Ruth: Current project VS Code lo open cheyyadaniki ready.\nProject: ${folder}`
+  );
+
+  const approved =
+    await confirmAction(
+      "Open the current project in VS Code",
+      rl
+    );
+
+  if (!approved) {
+    console.log(
+      "Ruth: Action cancelled."
+    );
+
+    return;
+  }
+
+  await openProjectInVSCode();
+}
+
+async function confirmAndOpenCursor(rl) {
+  const folder =
+    getWorkingDirectory();
+
+  console.log(
+    `Ruth: Current project Cursor lo open cheyyadaniki ready.\nProject: ${folder}`
+  );
+
+  const approved =
+    await confirmAction(
+      "Open the current project in Cursor",
+      rl
+    );
+
+  if (!approved) {
+    console.log(
+      "Ruth: Action cancelled."
+    );
+
+    return;
+  }
+
+  await openProjectInCursor();
+}
+
+async function confirmAndOpenProjectFolder(rl) {
+  const folder =
+    getWorkingDirectory();
+
+  console.log(
+    `Ruth: Current project folder open cheyyadaniki ready.\nFolder: ${folder}`
+  );
+
+  const approved =
+    await confirmAction(
+      "Open the current project folder",
+      rl
+    );
+
+  if (!approved) {
+    console.log(
+      "Ruth: Action cancelled."
+    );
+
+    return;
+  }
+
+  await openCurrentProjectFolder();
+}
+
+async function handleWorkspaceOpenCommand(
+  command,
+  rl
+) {
+  if (
+    command === "open vscode" ||
+    command === "open vs code" ||
+    command === "open code"
+  ) {
+    await confirmAndOpenVSCode(rl);
+    return true;
+  }
+
+  if (command === "open cursor") {
+    await confirmAndOpenCursor(rl);
+    return true;
+  }
+
+  if (
+    command ===
+      "open project folder" ||
+    command ===
+      "open the project folder" ||
+    command === "open explorer"
+  ) {
+    await confirmAndOpenProjectFolder(
+      rl
+    );
+    return true;
+  }
+
+  return false;
 }
 
 // ==========================================================
@@ -969,7 +1325,7 @@ async function startFrontend(rl) {
 
     console.log(
       `Expected: ${path.join(
-        PROJECT_ROOT,
+        getWorkingDirectory(),
         "frontend"
       )}`
     );
@@ -1022,7 +1378,7 @@ async function startBackend(rl) {
 
     console.log(
       `Expected: ${path.join(
-        PROJECT_ROOT,
+        getWorkingDirectory(),
         "backend"
       )}`
     );
@@ -1511,6 +1867,94 @@ async function stopBoth(rl) {
 }
 
 // ==========================================================
+// STOP RUTH-STARTED SERVERS ON SHUTDOWN
+// ==========================================================
+
+function stopRuthStartedServers() {
+  let stoppedAny = false;
+
+  for (const type of [
+    "frontend",
+    "backend",
+  ]) {
+    const server =
+      runningServers[type];
+
+    runningServers[type] =
+      null;
+
+    if (
+      !server ||
+      !server.terminalPid
+    ) {
+      continue;
+    }
+
+    if (
+      !isProcessAlive(
+        server.terminalPid
+      )
+    ) {
+      continue;
+    }
+
+    const result =
+      spawnSync(
+        "taskkill.exe",
+        [
+          "/PID",
+          String(
+            server.terminalPid
+          ),
+          "/T",
+          "/F",
+        ],
+        {
+          encoding: "utf8",
+          windowsHide: true,
+        }
+      );
+
+    if (result.status === 0) {
+      stoppedAny = true;
+
+      console.log(
+        `Ruth: ${type} server stop chesanu.`
+      );
+    } else if (
+      result.stderr?.trim()
+    ) {
+      console.error(
+        result.stderr.trim()
+      );
+    }
+  }
+
+  return stoppedAny;
+}
+
+async function shutdownRuth() {
+  console.log(
+    "Ruth: Sare Raju! Malli kaluddam. 👋"
+  );
+
+  const stoppedAny =
+    stopRuthStartedServers();
+
+  if (stoppedAny) {
+    console.log(
+      "Ruth: Ruth start chesina servers ni stop chesanu."
+    );
+  }
+
+  // console.log(
+  //   "Ruth: Personal AI Agent stopped."
+  // );
+
+  return "EXIT";
+}
+
+// ==========================================================
 // SERVER STATUS
 // ==========================================================
 
@@ -1528,7 +1972,7 @@ async function showServerStatus() {
   );
 
   console.log(
-    `Project: ${PROJECT_ROOT}`
+    `Project: ${getWorkingDirectory()}`
   );
 
   if (
@@ -1639,7 +2083,7 @@ async function handleProjectRequest(
     );
 
   const mentionsProject =
-    /\bunivolve\b|\bproject folder\b|\bproject files\b/i.test(
+    /\bproject folder\b|\bproject files\b|\bcurrent project\b/i.test(
       text
     );
 
@@ -1683,7 +2127,7 @@ async function handleProjectRequest(
 
     const files =
       await readProject(
-        PROJECT_ROOT
+        getWorkingDirectory()
       );
 
     if (
@@ -1896,7 +2340,7 @@ async function executePowerShellCommand(
           {
             shell: false,
 
-            cwd: PROJECT_ROOT,
+            cwd: getWorkingDirectory(),
 
             windowsHide: true,
 
@@ -2011,6 +2455,7 @@ async function executeRegisteredCommand(
             action.args,
             {
               shell: false,
+              cwd: getWorkingDirectory(),
               stdio: "ignore",
               windowsHide: false,
               detached: true,
@@ -2110,15 +2555,37 @@ export async function executeCommand(
       directCommand
     )
   ) {
-    console.log(
-      "Ruth: Sare Raju! Malli kaluddam. 👋"
+    return await shutdownRuth();
+  }
+
+  // ========================================================
+  // CHANGE DIRECTORY
+  // ========================================================
+
+  const cdMatch =
+    input.trim().match(
+      /^cd(?:\s+(.+))?$/i
     );
 
-    console.log(
-      "Ruth: Running servers automatic ga stop cheyyaledu."
+  if (cdMatch) {
+    changeWorkingDirectory(
+      cdMatch[1]
     );
 
-    return "EXIT";
+    return;
+  }
+
+  // ========================================================
+  // OPEN CURRENT PROJECT
+  // ========================================================
+
+  if (
+    await handleWorkspaceOpenCommand(
+      directCommand,
+      rl
+    )
+  ) {
+    return;
   }
 
   // ========================================================
@@ -2234,41 +2701,6 @@ export async function executeCommand(
       "check servers"
   ) {
     return await showServerStatus();
-  }
-
-  // ========================================================
-  // OPEN VSCODE
-  // ========================================================
-
-  if (
-    directCommand ===
-      "open vscode" ||
-    directCommand ===
-      "open vs code" ||
-    directCommand ===
-      "open code"
-  ) {
-    console.log(
-      `Ruth: Current project VS Code lo open cheyyadaniki ready.\nProject: ${PROJECT_ROOT}`
-    );
-
-    const approved =
-      await confirmAction(
-        "Open the current project in VS Code",
-        rl
-      );
-
-    if (!approved) {
-      console.log(
-        "Ruth: Action cancelled."
-      );
-
-      return;
-    }
-
-    await openProjectInVSCode();
-
-    return;
   }
 
   // ========================================================
@@ -2591,6 +3023,15 @@ export async function executeCommand(
         "Try a registered command or ask me to check the current project."
     );
 
+    return;
+  }
+
+  if (
+    await handleWorkspaceOpenCommand(
+      command,
+      rl
+    )
+  ) {
     return;
   }
 
