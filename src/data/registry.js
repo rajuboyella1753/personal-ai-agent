@@ -676,4 +676,52 @@ export const commands = {
     "Set CurrentUser execution policy to RemoteSigned",
     "Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy RemoteSigned"
   ),
+    // ==========================================
+  // SYSTEM COMMANDS
+  // ==========================================
+
+  "clear": {
+    description: "Clear the terminal screen",
+    type: "system",
+  },
+
+  "clear screen": {
+    description: "Clear the terminal screen",
+    type: "system",
+  },
+
+  "cls": {
+    description: "Clear the terminal screen",
+    type: "system",
+  },
+
+  "shutdown": {
+    description: "Shutdown Windows",
+    type: "system",
+  },
+
+  "restart": {
+    description: "Restart Windows",
+    type: "system",
+  },
+
+  "sleep": {
+    description: "Put Windows to sleep",
+    type: "system",
+  },
+
+  "lock": {
+    description: "Lock Windows",
+    type: "system",
+  },
+
+  "hibernate": {
+    description: "Hibernate Windows",
+    type: "system",
+  },
+
+  "cancel shutdown": {
+    description: "Cancel pending Windows shutdown",
+    type: "system",
+  },
 };

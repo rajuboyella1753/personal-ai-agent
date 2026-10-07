@@ -7,6 +7,7 @@ import { commands } from "../data/registry.js";
 import { confirmAction } from "../security/confirm.js";
 import { understandCommand } from "../ai/understand.js";
 import { readProject } from "../project/projectReader.js";
+
 import {
   addTask,
   getPendingTasks,
@@ -19,7 +20,14 @@ import {
   parseTaskDate,
 } from "../tasks/taskManager.js";
 import { analyzeCode } from "../project/codeAnalyzer.js";
-
+import {
+  shutdown,
+  restart,
+  sleep,
+  lock,
+  hibernate,
+  cancelShutdown,
+} from "../system/powerManager.js";
 // ==========================================================
 // CURRENT WORKING DIRECTORY
 // ==========================================================
@@ -2508,7 +2516,72 @@ export async function executeCommand(
 ) {
   const directCommand =
     input.trim().toLowerCase();
+    // ========================================================
+  // DIRECT SYSTEM COMMANDS
+  // ========================================================
 
+  if (
+    directCommand === "clear" ||
+    directCommand === "clear screen" ||
+    directCommand === "cls"
+  ) {
+    console.clear();
+    return;
+  }
+
+  if (directCommand === "cancel shutdown") {
+    cancelShutdown();
+
+    console.log(
+      "Ruth: Shutdown cancelled."
+    );
+
+    return;
+  }
+
+  if (
+    directCommand === "shutdown" ||
+    directCommand === "restart" ||
+    directCommand === "sleep" ||
+    directCommand === "lock" ||
+    directCommand === "hibernate"
+  ) {
+    const approved =
+      await confirmAction(
+        `Execute ${directCommand}?`,
+        rl
+      );
+
+    if (!approved) {
+      console.log(
+        "Ruth: Action cancelled."
+      );
+
+      return;
+    }
+
+    if (directCommand === "shutdown") {
+      shutdown();
+    }
+
+    if (directCommand === "restart") {
+      restart();
+    }
+
+    if (directCommand === "sleep") {
+      sleep();
+    }
+
+    if (directCommand === "lock") {
+      lock();
+    }
+
+    if (directCommand === "hibernate") {
+      hibernate();
+    }
+
+    return;
+  }
   if (!directCommand) {
     return;
   }
