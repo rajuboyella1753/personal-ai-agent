@@ -724,4 +724,52 @@ export const commands = {
     description: "Cancel pending Windows shutdown",
     type: "system",
   },
+  // ==========================================
+  // BROWSERS & AI TOOLS (NEW ADDITIONS)
+  // ==========================================
+
+  "open chrome": windowsApp(
+    "Open Google Chrome",
+    "cmd.exe",
+    ["/c", "start", "chrome"]
+  ),
+
+  "open brave": windowsApp(
+    "Open Brave Browser",
+    "cmd.exe",
+    ["/c", "start", "brave"]
+  ),
+
+  "open gemini": website(
+    "Open Google Gemini AI",
+    "https://gemini.google.com"
+  ),
+
+  "open claude": website(
+    "Open Anthropic Claude AI",
+    "https://claude.ai"
+  ),
+ // ==========================================
+  // GIT SHELL
+  // ==========================================
+
+  "open git shell": windowsApp(
+    "Open Git Bash in the project folder",
+    path.join(
+      process.env.ProgramFiles,
+      "Git",
+      "git-bash.exe"
+    ),
+    ["--cd=" + projectFolder]
+  ),
+
+  "open git bash": windowsApp(
+    "Open Git Bash in the project folder",
+    path.join(
+      process.env.ProgramFiles,
+      "Git",
+      "git-bash.exe"
+    ),
+    ["--cd=" + projectFolder]
+  ),
 };

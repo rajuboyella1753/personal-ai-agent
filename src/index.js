@@ -30,7 +30,7 @@ async function main() {
 
   try {
     while (true) {
-      const input = await rl.question("You > ");
+      const input = await rl.question("BSR > ");
 
       const command = input.trim();
 
