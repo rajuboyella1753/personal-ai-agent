@@ -753,7 +753,7 @@ export const commands = {
   // GIT SHELL
   // ==========================================
 
-  "open git shell": windowsApp(
+  "open git": windowsApp(
     "Open Git Bash in the project folder",
     path.join(
       process.env.ProgramFiles,
